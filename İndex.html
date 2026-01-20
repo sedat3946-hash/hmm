@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Üretim Hesaplama</title>
+    <style>
+        :root {
+            --seat-red: #cc0000;
+            --seat-black: #121212;
+            --seat-dark-gray: #1a1a1a;
+            --seat-light-gray: #d0d0d0;
+            --accent-orange: #e67e22;
+        }
+
+        body { 
+            background-color: var(--seat-black);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; color: var(--seat-light-gray);
+        }
+
+        .terminal-box {
+            width: 100%;
+            max-width: 440px;
+            background: var(--seat-dark-gray);
+            border: 1px solid #333;
+            border-top: 5px solid var(--seat-red);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .header { 
+            padding: 20px 15px; 
+            text-align: center; 
+            border-bottom: 1px solid #333; 
+            background: rgba(0,0,0,0.2);
+        }
+
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            color: #fff; 
+            text-transform: uppercase;
+        }
+
+        .content { padding: 25px; box-sizing: border-box; }
+
+        .form-group { margin-bottom: 18px; width: 100%; position: relative; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+
+        .info-box {
+            float: right;
+            background: #000;
+            border: 1px solid var(--seat-red);
+            color: var(--seat-red);
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 6px;
+            margin-top: -2px;
+        }
+
+        input, select {
+            width: 100%; 
+            background: #080808; 
+            border: 1px solid #444; 
+            border-left: 3px solid var(--seat-red);
+            color: #fff;
+            padding: 12px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            outline: none; 
+            border-radius: 0;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        input:focus { border-color: var(--seat-red); }
+
+        .dashboard { background: #0d0d0d; border: 1px solid #333; padding: 15px; margin-top: 15px; display: none; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .stat-row b { color: #fff; }
+
+        .highlight-box { background: #111; padding: 15px; margin-top: 15px; border: 1px solid #333; text-align: center; }
+        .highlight-box h2 { margin: 0; font-size: 24px; color: #fff; font-weight: 900; }
+        .yuvarlanmis-adet { color: var(--seat-red); font-size: 0.75em; margin-left: 5px; font-weight: 700; }
+
+        .btn { width: 100%; padding: 14px; font-weight: 900; text-transform: uppercase; cursor: pointer; border: none; margin-top: 10px; box-sizing: border-box; transition: 0.2s; }
+        .btn-red { background: var(--seat-red); color: white; }
+        .btn-red:hover { background: #b30000; }
+        .btn-outline { background: transparent; border: 1px solid #555; color: #bbb; font-size: 11px; }
+        .btn-outline:hover { border-color: var(--seat-red); color: var(--seat-red); }
+
+        #cizelgeSayfasi { display: none; padding: 0; max-height: 80vh; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #222; color: #fff; padding: 12px; position: sticky; top: 0; z-index: 20; border-bottom: 2px solid var(--seat-red); font-size: 10px; }
+        td { border-bottom: 1px solid #222; padding: 10px; text-align: center; color: #bbb; }
+        tr:nth-child(even) { background: #141414; }
+
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal-box">
+    <div id="anaSayfa">
+        <div class="header"><h1>Seat Üretim Hesaplama</h1></div>
+        <div class="content">
+            <div class="form-group clearfix">
+                <label>Aparat Dönüşümü Var mı? <span class="info-box">420 DAKİKA</span></label>
+                <select id="aparatVarMi" onchange="tetikleHesapla()">
+                    <option value="0">HAYIR</option>
+                    <option value="30">EVET (+30 DK)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Duruş Var mı?</label>
+                <select id="durusSorusu" onchange="toggleDurusInput()">
+                    <option value="hayir">HAYIR</option>
+                    <option value="evet">EVET</option>
+                </select>
+                <input type="number" id="durusSuresi" oninput="tetikleHesapla()" placeholder="Süre (dk)" style="display:none; margin-top:10px;">
+            </div>
+
+            <div class="form-group clearfix">
+                <label>HDL (BAGAJ) <span class="info-box">50/SAAT</span></label>
+                <input type="number" id="hdlInput" oninput="temizleVeHesapla('HDL')" placeholder="ADET GİRİN">
+            </div>
+
+            <div class="form-group clearfix">
+                <label>SWL (ÇAMURLUK) <span class="info-box">45/SAAT</span></label>
+                <input type="number" id="swlInput" oninput="temizleVeHesapla('SWL')" placeholder="ADET GİRİN">
+            </div>
+
+            <div id="sonucPaneli" class="dashboard">
+                <div class="stat-row"><span id="uretimEtiket">Üretim:</span><b id="harcananSure">0 dk</b></div>
+                <div id="aparatSatiri" class="stat-row" style="display:none;"><span>Aparat:</span><b>30 dk</b></div>
+                <div id="durusSatiri" class="stat-row" style="display:none;"><span>Duruş:</span><b id="durusGosterge">0 dk</b></div>
+
+                <div class="stat-row" style="color:var(--accent-orange); border-top:1px solid #333; padding-top:10px; margin-top:10px;">
+                    <span id="kalanModelEtiket">KALAN SÜRE:</span><b id="kalanSure">0 dk</b>
+                </div>
+
+                <div class="highlight-box">
+                    <small id="hedefModelText" style="color: #666; font-weight: 800; font-size: 10px; letter-spacing: 1px;">KALAN HEDEF</small>
+                    <h2><span id="hedefKusurat">0.00</span><span id="hedefTam" class="yuvarlanmis-adet"></span></h2>
+                </div>
+            </div>
+
+            <button class="btn btn-outline" onclick="sayfaDegistir('cizelgeSayfasi')">Dakika/Adet Çizelgesi</button>
+            <button class="btn btn-red" onclick="location.reload()">Sistemi Sıfırla</button>
+        </div>
+    </div>
+
+    <div id="cizelgeSayfasi">
+        <div class="header"><h1>ÇİZELGE</h1></div>
+        <table>
+            <thead>
+                <tr>
+                    <th>SÜRE</th>
+                    <th>HDL (50)</th>
+                    <th>SWL (45)</th>
+                </tr>
+            </thead>
+            <tbody id="cizelgeGövde"></tbody>
+        </table>
+        <div style="padding: 20px;">
+            <button class="btn btn-red" onclick="sayfaDegistir('anaSayfa')">Geri Dön</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let sonGiris = ""; 
+    const HIZ_HDL = 50;
+    const HIZ_SWL = 45;
+
+    function sayfaDegistir(hedef) {
+        document.getElementById('anaSayfa').style.display = hedef === 'anaSayfa' ? 'block' : 'none';
+        document.getElementById('cizelgeSayfasi').style.display = hedef === 'cizelgeSayfasi' ? 'block' : 'none';
+        if(hedef === 'cizelgeSayfasi') cizelgeOlustur();
+    }
+
+    function cizelgeOlustur() {
+        const gövde = document.getElementById('cizelgeGövde');
+        gövde.innerHTML = "";
+        for (let dk = 1; dk <= 60; dk++) {
+            let hdl = (dk / 60) * HIZ_HDL;
+            let swl = (dk / 60) * HIZ_SWL;
+            gövde.insertAdjacentHTML('beforeend', `<tr><td><b>${dk} dk</b></td><td>${hdl.toFixed(2)} <span class="yuvarlanmis-adet">${Math.ceil(hdl)} Adet</span></td><td>${swl.toFixed(2)} <span class="yuvarlanmis-adet">${Math.ceil(swl)} Adet</span></td></tr>`);
+        }
+    }
+
+    function toggleDurusInput() {
+        const soru = document.getElementById('durusSorusu').value;
+        const inputField = document.getElementById('durusSuresi');
+        inputField.style.display = soru === 'evet' ? "block" : "none";
+        if (soru !== 'evet') { inputField.value = ""; tetikleHesapla(); }
+    }
+
+    function tetikleHesapla() { if (sonGiris) hesapla(sonGiris); }
+
+    // Otomatik silme fonksiyonu
+    function temizleVeHesapla(kaynak) {
+        const hdlField = document.getElementById('hdlInput');
+        const swlField = document.getElementById('swlInput');
+
+        if (kaynak === 'HDL' && hdlField.value !== "") {
+            swlField.value = ""; // Diğerini sil
+        } else if (kaynak === 'SWL' && swlField.value !== "") {
+            hdlField.value = ""; // Diğerini sil
+        }
+        hesapla(kaynak);
+    }
+
+    function hesapla(kaynak) {
+        const hdlField = document.getElementById('hdlInput');
+        const swlField = document.getElementById('swlInput');
+
+        sonGiris = kaynak;
+        const TOPLAM_MESAI = 420;
+        const aparatDk = parseFloat(document.getElementById('aparatVarMi').value) || 0;
+        const durusDk = parseFloat(document.getElementById('durusSuresi').value) || 0;
+
+        let val = kaynak === 'HDL' ? hdlField.value : swlField.value;
+        let adet = parseFloat(val);
+
+        if (val === "" || isNaN(adet)) {
+            document.getElementById('sonucPaneli').style.display = "none";
+            return;
+        }
+
+        document.getElementById('sonucPaneli').style.display = "block";
+        let uretimDk = (val === "0") ? 0 : (adet / (kaynak === 'HDL' ? HIZ_HDL : HIZ_SWL)) * 60;
+        let kayip = aparatDk + durusDk;
+        let kalanDk = TOPLAM_MESAI - uretimDk - kayip;
+        let hedefModel = (kaynak === 'HDL' ? 'SWL' : 'HDL');
+        let hedefHiz = (kaynak === 'HDL' ? HIZ_SWL : HIZ_HDL);
+
+        document.getElementById('uretimEtiket').innerText = kaynak + " SÜRESİ:";
+        document.getElementById('harcananSure').innerText = val === "0" ? "HİÇ ÜRETİLMEDİ" : uretimDk.toFixed(1) + " dk";
+        document.getElementById('aparatSatiri').style.display = aparatDk > 0 ? "flex" : "none";
+        document.getElementById('durusSatiri').style.display = durusDk > 0 ? "flex" : "none";
+        document.getElementById('durusGosterge').innerText = durusDk + " dk";
+        document.getElementById('kalanModelEtiket').innerText = "KALAN " + hedefModel + " SÜRESİ:";
+        document.getElementById('hedefModelText').innerText = "KALAN " + hedefModel + " HEDEFİ";
+
+        if (kalanDk < 0) {
+            document.getElementById('kalanSure').innerText = "0 dk";
+            document.getElementById('hedefKusurat').innerText = "LIMIT AŞILDI";
+            document.getElementById('hedefTam').innerText = "";
+        } else {
+            let kalanAdet = (kalanDk / 60) * hedefHiz;
+            document.getElementById('kalanSure').innerText = kalanDk.toFixed(1) + " dk";
+            document.getElementById('hedefKusurat').innerText = kalanAdet.toFixed(2);
+            document.getElementById('hedefTam').innerText = "(" + Math.ceil(kalanAdet) + " Adet)";
+        }
+    }
+</script>
+</body>
+</html>
