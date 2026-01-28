@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seat Üretim Master v8.4</title>
+    <title>Seat Üretim Master v8.8</title>
     <style>
         :root { 
             --seat-red: #cc0000; --seat-black: #0a0a0a; --seat-dark-gray: #151515; 
@@ -37,16 +37,18 @@
         label { display: block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: #777; text-transform: uppercase; }
         .low-production { color: var(--seat-red) !important; }
         
-        .target-box { margin-top: 10px; padding: 8px; background: #080808; border: 1px solid #111; border-radius: 4px; transition: 0.3s; }
-        .target-label { font-size: 9px; color: #666; font-weight: 900; display: block; }
-        .target-num { font-size: 32px; color: #fff; font-weight: 900; display: block; }
+        /* Yenilenen Hedef Kutusu */
+        .target-box { margin-top: 10px; padding: 12px; background: #050505; border: 1px solid #1a1a1a; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
+        .target-num { font-size: 44px; color: #fff; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+        .target-label { font-size: 11px; color: #aaa; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+
         @keyframes glow-red { 0% { box-shadow: 0 0 2px rgba(204,0,0,0.2); } 50% { box-shadow: 0 0 10px rgba(204,0,0,0.6); } 100% { box-shadow: 0 0 2px rgba(204,0,0,0.2); } }
     </style>
 </head>
 <body onload="setup()">
 
 <div class="terminal-box">
-    <div class="header" style="text-align: center; border-bottom: 1px solid #333; margin-bottom: 15px;"><h1 style="margin:0; font-size:16px;">ÜRETİM MASTER v8.4</h1></div>
+    <div class="header" style="text-align: center; border-bottom: 1px solid #333; margin-bottom: 15px;"><h1 style="margin:0; font-size:16px;">ÜRETİM MASTER v8.8</h1></div>
 
     <div class="main-panel">
         <div class="panel-row">
@@ -89,15 +91,21 @@
     <div id="diffBox" class="diff-panel">
         <span id="targetInfo" style="font-size:38px; font-weight:900; display:block;">0 DK</span>
         <div id="diffVal" style="font-size:11px; font-weight:800; margin-bottom: 10px;">PERFORMANS</div>
-        <div id="hdlBox" class="target-box"><span class="target-label">HDL OLMALIYDI</span><span id="hdlTargetVal" class="target-num">0</span></div>
-        <div id="swlBox" class="target-box"><span class="target-label">SWL OLMALIYDI</span><span id="swlTargetVal" class="target-num">0</span></div>
+        <div id="hdlBox" class="target-box"><span id="hdlTargetVal" class="target-num">0</span><span class="target-label">HDL OLMALIYDI</span></div>
+        <div id="swlBox" class="target-box"><span id="swlTargetVal" class="target-num">0</span><span class="target-label">SWL OLMALIYDI</span></div>
     </div>
 
-    <label>Kalan Sürede Hedef Model</label>
+    <label>ÜRETİMİN DEVAMINDA NE YAPILACAK</label>
     <select id="modelHedef" onchange="hesapla()" style="border-left: 3px solid var(--seat-red); margin-bottom:10px;"><option value="HDL">HDL (50/S)</option><option value="SWL">SWL (45/S)</option></select>
 
-    <div class="panel-result"><span style="font-size:10px; font-weight:bold; color:var(--accent);">KALAN SÜREDE BASILACAK</span><span id="sonuc" class="val-display">0</span></div>
-    <div class="total-panel"><span style="font-size:10px; font-weight:bold; color:var(--success);">VARDİYA SONU NET TOPLAM</span><span id="toplamSonuc" class="val-display">0</span></div>
+    <div class="panel-result">
+        <span style="font-size:10px; font-weight:bold; color:var(--accent);">BU SAATTEN SONRA BASILACAK SAYI</span>
+        <span id="sonuc" class="val-display">0</span>
+    </div>
+    <div class="total-panel">
+        <span style="font-size:10px; font-weight:bold; color:var(--success);">VARDİYA SONU NET TOPLAM</span>
+        <span id="toplamSonuc" class="val-display">0</span>
+    </div>
 </div>
 
 <script>
@@ -144,11 +152,8 @@
         activeMod = mod;
         document.getElementById('adetHDL').className = (mod === 'HDL') ? 'input-active' : 'input-passive';
         document.getElementById('adetSWL').className = (mod === 'SWL') ? 'input-active' : 'input-passive';
-        
-        // DİNAMİK GİZLEME: Aktif olmayanı orta panelden tamamen kaldır
-        document.getElementById('hdlBox').style.display = (mod === 'HDL') ? "block" : "none";
-        document.getElementById('swlBox').style.display = (mod === 'SWL') ? "block" : "none";
-        
+        document.getElementById('hdlBox').style.display = (mod === 'HDL') ? "flex" : "none";
+        document.getElementById('swlBox').style.display = (mod === 'SWL') ? "flex" : "none";
         if(mod === 'HDL') document.getElementById('adetSWL').value = ""; else document.getElementById('adetHDL').value = "";
         hesapla();
     }
