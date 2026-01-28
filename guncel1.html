@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Üretim Master v8.4</title>
+    <style>
+        :root { 
+            --seat-red: #cc0000; --seat-black: #0a0a0a; --seat-dark-gray: #151515; 
+            --seat-light-gray: #e0e0e0; --accent: #f39c12; --success: #27ae60; 
+        }
+        body { background-color: var(--seat-black); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: var(--seat-light-gray); }
+        .terminal-box { width: 100%; max-width: 400px; background: var(--seat-dark-gray); border-top: 5px solid var(--seat-red); padding: 20px; box-sizing: border-box; }
+        .main-panel { background: #000; border: 1px solid #222; border-left: 4px solid var(--seat-red); padding: 12px; margin-bottom: 15px; }
+        .panel-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        select, input[type="number"] { background: #111; border: 1px solid #333; color: #fff; padding: 12px; font-size: 14px; font-weight: bold; outline: none; box-sizing: border-box; width: 100%; border-radius: 4px; }
+        
+        .input-group { flex: 1; }
+        .input-active { border: 2px solid var(--seat-red) !important; background: #1a0000 !important; }
+        .input-passive { opacity: 0.4; border: 1px solid #222 !important; }
+
+        .v-sonu-btn { background: #222; border: 1px solid #444; color: #777; padding: 0 8px; height: 35px; font-size: 8px; font-weight: bold; cursor: pointer; border-radius: 2px; text-transform: uppercase; flex: 1; margin-top: 14px; animation: glow-red 2.5s infinite ease-in-out; }
+        .v-sonu-btn.active { background: var(--seat-red); color: white; border-color: var(--seat-red); animation: none; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 20px; }
+        .toggle-btn { background: #222; border: 1px solid #444; color: #555; padding: 12px 2px; font-size: 9px; font-weight: bold; cursor: pointer; text-align: center; border-radius: 2px; text-transform: uppercase; transition: 0.2s; }
+        .toggle-btn.active { background: var(--seat-red); color: white; border-color: var(--seat-red); }
+        .btn-locked { pointer-events: none; opacity: 0.6; cursor: not-allowed; }
+
+        .auto-toggle { font-size: 8px; font-weight: 900; background: #333; color: #777; border: none; padding: 4px 8px; cursor: pointer; border-radius: 3px; }
+        .auto-toggle.on { background: var(--seat-red); color: white; }
+        
+        .diff-panel { background: #000; border: 1px solid #222; border-bottom: 4px solid #444; padding: 15px; text-align: center; margin-bottom: 12px; }
+        .panel-result { background: #000; border-left: 5px solid var(--accent); padding: 12px; text-align: center; margin-top: 8px; }
+        .total-panel { background: #080808; border-top: 5px solid var(--success); padding: 12px; text-align: center; margin-top: 10px; }
+        .val-display { font-size: 28px; font-weight: 900; color: #fff; display: block; }
+        label { display: block; font-size: 10px; font-weight: 800; margin-bottom: 6px; color: #777; text-transform: uppercase; }
+        .low-production { color: var(--seat-red) !important; }
+        
+        .target-box { margin-top: 10px; padding: 8px; background: #080808; border: 1px solid #111; border-radius: 4px; transition: 0.3s; }
+        .target-label { font-size: 9px; color: #666; font-weight: 900; display: block; }
+        .target-num { font-size: 32px; color: #fff; font-weight: 900; display: block; }
+        @keyframes glow-red { 0% { box-shadow: 0 0 2px rgba(204,0,0,0.2); } 50% { box-shadow: 0 0 10px rgba(204,0,0,0.6); } 100% { box-shadow: 0 0 2px rgba(204,0,0,0.2); } }
+    </style>
+</head>
+<body onload="setup()">
+
+<div class="terminal-box">
+    <div class="header" style="text-align: center; border-bottom: 1px solid #333; margin-bottom: 15px;"><h1 style="margin:0; font-size:16px;">ÜRETİM MASTER v8.4</h1></div>
+
+    <div class="main-panel">
+        <div class="panel-row">
+            <div style="flex: 1;"><label>Vardiya</label>
+                <select id="vBas" onchange="hesapla()">
+                    <option value="08:00">08-16 (Gündüz)</option>
+                    <option value="16:00">16-00 (Akşam)</option>
+                    <option value="00:00">00-08 (Gece)</option>
+                </select>
+            </div>
+        </div>
+        <div class="panel-row">
+            <div style="flex: 2;"><label>Seçili Saat</label>
+                <div style="display:flex; gap:2px"><select id="saatSec" onchange="hesapla()"></select><select id="dakikaSec" onchange="hesapla()"></select></div>
+            </div>
+            <button id="vSonuBtn" class="v-sonu-btn" onclick="toggleVSonu()">VARDİYA SONU</button>
+        </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px"><label>Duruşlar</label><button id="autoModeBtn" class="auto-toggle on" onclick="toggleAutoMode()">OTO MOLA: AÇIK</button></div>
+    <div class="btn-grid">
+        <div class="toggle-btn btn-locked" style="background: #111;">Hazırlık -10</div>
+        <div id="m1" class="toggle-btn" onclick="toggleMola('m1', 10)">1. Çay</div>
+        <div id="mYemek" class="toggle-btn" onclick="toggleMola('mYemek', 30)">Yemek</div>
+        <div id="m2" class="toggle-btn" onclick="toggleMola('m2', 10)">2. Çay</div>
+        <div id="mAparat" class="toggle-btn" style="grid-column: span 2;" onclick="toggleMola('mAparat', 30)">Aparat Dönüşü (-30)</div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <div class="input-group">
+            <label>HDL Yapılan</label>
+            <input type="number" id="adetHDL" placeholder="0" onfocus="setActive('HDL')" oninput="handleInput('HDL')">
+        </div>
+        <div class="input-group">
+            <label>SWL Yapılan</label>
+            <input type="number" id="adetSWL" placeholder="0" onfocus="setActive('SWL')" oninput="handleInput('SWL')">
+        </div>
+    </div>
+
+    <div id="diffBox" class="diff-panel">
+        <span id="targetInfo" style="font-size:38px; font-weight:900; display:block;">0 DK</span>
+        <div id="diffVal" style="font-size:11px; font-weight:800; margin-bottom: 10px;">PERFORMANS</div>
+        <div id="hdlBox" class="target-box"><span class="target-label">HDL OLMALIYDI</span><span id="hdlTargetVal" class="target-num">0</span></div>
+        <div id="swlBox" class="target-box"><span class="target-label">SWL OLMALIYDI</span><span id="swlTargetVal" class="target-num">0</span></div>
+    </div>
+
+    <label>Kalan Sürede Hedef Model</label>
+    <select id="modelHedef" onchange="hesapla()" style="border-left: 3px solid var(--seat-red); margin-bottom:10px;"><option value="HDL">HDL (50/S)</option><option value="SWL">SWL (45/S)</option></select>
+
+    <div class="panel-result"><span style="font-size:10px; font-weight:bold; color:var(--accent);">KALAN SÜREDE BASILACAK</span><span id="sonuc" class="val-display">0</span></div>
+    <div class="total-panel"><span style="font-size:10px; font-weight:bold; color:var(--success);">VARDİYA SONU NET TOPLAM</span><span id="toplamSonuc" class="val-display">0</span></div>
+</div>
+
+<script>
+    const HIZ_HDL = 50, HIZ_SWL = 45;
+    let isVSonuActive = false, isAutoMode = true, activeMod = 'HDL';
+    let aktifMolalar = { m1: 0, mYemek: 0, m2: 0, mAparat: 0 };
+
+    function initLists() {
+        const s = document.getElementById('saatSec'), d = document.getElementById('dakikaSec');
+        for(let i=0; i<24; i++) s.innerHTML += `<option value="${i}">${i < 10 ? '0'+i : i}</option>`;
+        for(let i=0; i<60; i++) d.innerHTML += `<option value="${i}">${i < 10 ? '0'+i : i}</option>`;
+    }
+
+    function setup() {
+        initLists();
+        const now = new Date(), h = now.getHours();
+        document.getElementById('saatSec').value = h;
+        document.getElementById('dakikaSec').value = now.getMinutes();
+        const vBas = document.getElementById('vBas');
+        if (h >= 8 && h < 16) vBas.value = "08:00"; else if (h >= 16 && h < 24) vBas.value = "16:00"; else vBas.value = "00:00";
+        updateButtonStatus();
+        setActive('HDL');
+        hesapla();
+    }
+
+    function updateButtonStatus() {
+        const btns = ['m1', 'mYemek', 'm2'];
+        btns.forEach(id => {
+            const btn = document.getElementById(id);
+            if (isAutoMode) btn.classList.add('btn-locked');
+            else btn.classList.remove('btn-locked');
+        });
+    }
+
+    function toggleAutoMode() { 
+        isAutoMode = !isAutoMode; 
+        document.getElementById('autoModeBtn').classList.toggle('on', isAutoMode);
+        document.getElementById('autoModeBtn').innerText = isAutoMode ? "OTO MOLA: AÇIK" : "OTO MOLA: KAPALI";
+        updateButtonStatus();
+        hesapla(); 
+    }
+
+    function setActive(mod) {
+        activeMod = mod;
+        document.getElementById('adetHDL').className = (mod === 'HDL') ? 'input-active' : 'input-passive';
+        document.getElementById('adetSWL').className = (mod === 'SWL') ? 'input-active' : 'input-passive';
+        
+        // DİNAMİK GİZLEME: Aktif olmayanı orta panelden tamamen kaldır
+        document.getElementById('hdlBox').style.display = (mod === 'HDL') ? "block" : "none";
+        document.getElementById('swlBox').style.display = (mod === 'SWL') ? "block" : "none";
+        
+        if(mod === 'HDL') document.getElementById('adetSWL').value = ""; else document.getElementById('adetHDL').value = "";
+        hesapla();
+    }
+
+    function handleInput(type) { if(type !== activeMod) setActive(type); hesapla(); }
+
+    function toggleMola(id, sure) {
+        if(id !== 'mAparat' && isAutoMode) return; 
+        aktifMolalar[id] = (aktifMolalar[id] > 0) ? 0 : sure;
+        document.getElementById(id).classList.toggle('active', aktifMolalar[id] > 0);
+        hesapla();
+    }
+
+    function toggleVSonu() {
+        isVSonuActive = !isVSonuActive;
+        const vBas = document.getElementById('vBas').value;
+        if (isVSonuActive) {
+            if (vBas === "08:00") document.getElementById('saatSec').value = 16; 
+            else if (vBas === "16:00") document.getElementById('saatSec').value = 0; 
+            else document.getElementById('saatSec').value = 8;
+            document.getElementById('dakikaSec').value = 0;
+        } else {
+            const now = new Date(); document.getElementById('saatSec').value = now.getHours(); document.getElementById('dakikaSec').value = now.getMinutes();
+        }
+        document.getElementById('vSonuBtn').classList.toggle('active', isVSonuActive);
+        hesapla();
+    }
+
+    function hesapla() {
+        const sh = parseInt(document.getElementById('saatSec').value), sm = parseInt(document.getElementById('dakikaSec').value), vBasValue = document.getElementById('vBas').value;
+        let [bh, bm] = vBasValue.split(':').map(Number);
+        let gecenBrut = (sh * 60 + sm) - (bh * 60 + bm);
+        if (gecenBrut < 0) gecenBrut += 1440;
+
+        if (isAutoMode) {
+            aktifMolalar.m1 = (gecenBrut >= 100) ? 10 : 0;
+            aktifMolalar.mYemek = (gecenBrut >= 200) ? 30 : 0;
+            aktifMolalar.m2 = (gecenBrut >= 300) ? 10 : 0;
+            ['m1', 'mYemek', 'm2'].forEach(id => document.getElementById(id).classList.toggle('active', aktifMolalar[id] > 0));
+        }
+
+        let vardiyaNetKapasite = 420 - aktifMolalar.mAparat;
+        let molalarGecen = 10 + aktifMolalar.m1 + aktifMolalar.mYemek + aktifMolalar.m2 + (gecenBrut >= 240 ? aktifMolalar.mAparat : 0);
+        let netCalisilanDakika = Math.max(0, Math.min(vardiyaNetKapasite, gecenBrut - molalarGecen));
+        
+        const valHDL = parseFloat(document.getElementById('adetHDL').value) || 0, valSWL = parseFloat(document.getElementById('adetSWL').value) || 0;
+        const speed = (document.getElementById('modelHedef').value === 'HDL') ? HIZ_HDL : HIZ_SWL;
+        
+        document.getElementById('hdlTargetVal').innerText = Math.round((netCalisilanDakika / 60) * HIZ_HDL);
+        document.getElementById('swlTargetVal').innerText = Math.round((netCalisilanDakika / 60) * HIZ_SWL);
+
+        let hakEdilenDk = (activeMod === 'HDL') ? ((valHDL / HIZ_HDL) * 60) : ((valSWL / HIZ_SWL) * 60);
+        let dkFarki = Math.round(hakEdilenDk - netCalisilanDakika);
+        let kalanNetDakika = Math.max(0, vardiyaNetKapasite - hakEdilenDk);
+        let basılacakAdet = isVSonuActive ? 0 : Math.round((kalanNetDakika / 60) * speed);
+        let tahminiToplam = Math.round((valHDL + valSWL) + basılacakAdet);
+
+        document.getElementById('sonuc').innerText = basılacakAdet;
+        document.getElementById('targetInfo').innerText = (dkFarki > 0 ? "+" : "") + dkFarki + " DK";
+        const vSonuElement = document.getElementById('toplamSonuc');
+        vSonuElement.innerText = tahminiToplam;
+        vSonuElement.classList.toggle('low-production', tahminiToplam < 325);
+        
+        let dVal = document.getElementById('diffVal'), dBox = document.getElementById('diffBox');
+        if (dkFarki < 0) { dVal.innerText = "GERİDESİN"; dVal.style.color = "var(--seat-red)"; dBox.style.borderBottomColor = "var(--seat-red)"; }
+        else if (dkFarki >= 1) { dVal.innerText = "ÖNDESİN"; dVal.style.color = "var(--success)"; dBox.style.borderBottomColor = "var(--success)"; }
+        else { dVal.innerText = "TAM ZAMANINDA"; dVal.style.color = "#fff"; dBox.style.borderBottomColor = "#444"; }
+    }
+</script>
+</body>
+</html>
