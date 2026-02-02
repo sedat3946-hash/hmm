@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seat Üretim Master v9.1</title>
+    <style>
+        :root { 
+            --seat-red: #cc0000; 
+            --seat-black: #0a0a0a; 
+            --seat-dark-gray: #151515; 
+            --seat-light-gray: #e0e0e0; 
+            --accent: #f39c12; 
+            --success: #27ae60; 
+            --gradient-start: #1a0000;
+            --gradient-end: #0a0a0a;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body { 
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            color: var(--seat-light-gray);
+            padding: 20px;
+        }
+        
+        .terminal-box { 
+            width: 100%; 
+            max-width: 450px; 
+            background: var(--seat-dark-gray); 
+            border-top: 6px solid var(--seat-red); 
+            padding: 25px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border-radius: 8px;
+        }
+        
+        .header { 
+            text-align: center; 
+            border-bottom: 2px solid #333; 
+            margin-bottom: 20px; 
+            padding-bottom: 15px;
+        }
+        
+        .header h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--seat-red), #ff4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        
+        .main-panel { 
+            background: linear-gradient(145deg, #0a0a0a, #1a1a1a); 
+            border: 1px solid #222; 
+            border-left: 5px solid var(--seat-red); 
+            padding: 18px; 
+            margin-bottom: 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .panel-row { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 12px; 
+            margin-bottom: 12px; 
+        }
+        
+        .panel-row:last-child { margin-bottom: 0; }
+        
+        select, input[type="number"] { 
+            background: #0f0f0f; 
+            border: 2px solid #2a2a2a; 
+            color: #fff; 
+            padding: 14px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            outline: none; 
+            width: 100%; 
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        select:hover, input[type="number"]:hover {
+            border-color: #444;
+        }
+        
+        select:focus, input[type="number"]:focus {
+            border-color: var(--seat-red);
+            background: #1a0000;
+        }
+        
+        .input-group { flex: 1; }
+        
+        .input-active { 
+            border: 2px solid var(--seat-red) !important; 
+            background: #1a0000 !important;
+            box-shadow: 0 0 15px rgba(204,0,0,0.3);
+        }
+        
+        .input-passive { 
+            opacity: 0.5; 
+            border: 2px solid #1a1a1a !important; 
+        }
+
+        .v-sonu-btn { 
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a); 
+            border: 2px solid #444; 
+            color: #888; 
+            padding: 0 12px; 
+            height: 42px; 
+            font-size: 9px; 
+            font-weight: 900; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            text-transform: uppercase; 
+            flex: 1; 
+            margin-top: 14px; 
+            animation: glow-red 2.5s infinite ease-in-out;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+        
+        .v-sonu-btn.active { 
+            background: linear-gradient(145deg, var(--seat-red), #aa0000); 
+            color: white; 
+            border-color: var(--seat-red); 
+            animation: none;
+            box-shadow: 0 0 20px rgba(204,0,0,0.5);
+        }
+        
+        .section-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px;
+        }
+        
+        .btn-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            margin-bottom: 20px; 
+        }
+        
+        .toggle-btn { 
+            background: linear-gradient(145deg, #1a1a1a, #252525); 
+            border: 2px solid #333; 
+            color: #666; 
+            padding: 14px 4px; 
+            font-size: 10px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-align: center; 
+            border-radius: 6px; 
+            text-transform: uppercase; 
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+        
+        .toggle-btn:hover:not(.btn-locked) {
+            border-color: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .toggle-btn.active { 
+            background: linear-gradient(145deg, var(--seat-red), #aa0000); 
+            color: white; 
+            border-color: var(--seat-red);
+            box-shadow: 0 0 15px rgba(204,0,0,0.4);
+        }
+        
+        .btn-locked { 
+            pointer-events: none; 
+            opacity: 0.4; 
+            cursor: not-allowed; 
+        }
+
+        .auto-toggle { 
+            font-size: 9px; 
+            font-weight: 900; 
+            background: linear-gradient(145deg, #252525, #333); 
+            color: #777; 
+            border: 2px solid #444; 
+            padding: 6px 12px; 
+            cursor: pointer; 
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .auto-toggle:hover {
+            border-color: #555;
+        }
+        
+        .auto-toggle.on { 
+            background: linear-gradient(145deg, var(--seat-red), #aa0000); 
+            color: white;
+            border-color: var(--seat-red);
+            box-shadow: 0 0 10px rgba(204,0,0,0.3);
+        }
+        
+        .diff-panel { 
+            background: linear-gradient(145deg, #0a0a0a, #151515); 
+            border: 2px solid #222; 
+            border-bottom: 4px solid #444; 
+            padding: 20px; 
+            text-align: center; 
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .panel-result { 
+            background: linear-gradient(145deg, #0a0a0a, #151515); 
+            border-left: 5px solid var(--accent); 
+            padding: 16px; 
+            text-align: center; 
+            margin-top: 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .total-panel { 
+            background: linear-gradient(145deg, #0a0a0a, #0f0f0f); 
+            border-top: 5px solid var(--success); 
+            padding: 16px; 
+            text-align: center; 
+            margin-top: 12px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .val-display { 
+            font-size: 32px; 
+            font-weight: 900; 
+            color: #fff; 
+            display: block;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
+        }
+        
+        label { 
+            display: block; 
+            font-size: 11px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            color: #888; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .low-production { 
+            color: var(--seat-red) !important;
+            animation: pulse-red 1.5s infinite;
+        }
+        
+        .target-box { 
+            margin-top: 12px; 
+            padding: 16px; 
+            background: linear-gradient(145deg, #050505, #0f0f0f); 
+            border: 2px solid #1a1a1a; 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+        }
+        
+        .target-num { 
+            font-size: 52px; 
+            color: #fff; 
+            font-weight: 900; 
+            line-height: 1; 
+            margin-bottom: 8px;
+            text-shadow: 0 2px 15px rgba(255,255,255,0.15);
+        }
+        
+        .target-label { 
+            font-size: 11px; 
+            color: #aaa; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+        }
+
+        .debug-info {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 6px;
+            font-size: 10px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        @keyframes glow-red { 
+            0% { box-shadow: 0 0 3px rgba(204,0,0,0.3); } 
+            50% { box-shadow: 0 0 15px rgba(204,0,0,0.6); } 
+            100% { box-shadow: 0 0 3px rgba(204,0,0,0.3); } 
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body onload="setup()">
+
+<div class="terminal-box">
+    <div class="header">
+        <h1>ÜRETİM MASTER v9.1</h1>
+    </div>
+
+    <div class="main-panel">
+        <div class="panel-row">
+            <div style="flex: 1;">
+                <label>Vardiya Seçimi</label>
+                <select id="vBas" onchange="hesapla()">
+                    <option value="08:00">08-16 (Gündüz)</option>
+                    <option value="16:00">16-00 (Akşam)</option>
+                    <option value="00:00">00-08 (Gece)</option>
+                </select>
+            </div>
+        </div>
+        <div class="panel-row">
+            <div style="flex: 2;">
+                <label>Şu Anki Saat</label>
+                <div style="display:flex; gap:6px">
+                    <select id="saatSec" onchange="hesapla()"></select>
+                    <select id="dakikaSec" onchange="hesapla()"></select>
+                </div>
+            </div>
+            <button id="vSonuBtn" class="v-sonu-btn" onclick="toggleVSonu()">Vardiya Sonu</button>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <label style="margin: 0;">Mola Durumları</label>
+        <button id="autoModeBtn" class="auto-toggle on" onclick="toggleAutoMode()">OTO MOLA: AÇIK</button>
+    </div>
+    
+    <div class="btn-grid">
+        <div class="toggle-btn btn-locked" style="background: linear-gradient(145deg, #111, #1a1a1a);">Hazırlık -10</div>
+        <div id="m1" class="toggle-btn" onclick="toggleMola('m1', 10)">1. Çay</div>
+        <div id="mYemek" class="toggle-btn" onclick="toggleMola('mYemek', 30)">Yemek</div>
+        <div id="m2" class="toggle-btn" onclick="toggleMola('m2', 10)">2. Çay</div>
+        <div id="mAparat" class="toggle-btn" style="grid-column: span 2;" onclick="toggleAparat()">Aparat Dönüşü (-30)</div>
+    </div>
+
+    <!-- DURUŞ GİRİŞ PANELİ -->
+    <div style="margin-bottom: 15px;">
+        <button id="durusToggleBtn" class="auto-toggle" onclick="toggleDurusPanel()" style="width: 100%; padding: 10px;">
+            ⚠️ DURUŞ GİRİŞİ
+        </button>
+        <div id="durusPanel" style="display: none; margin-top: 10px; background: linear-gradient(145deg, #1a0a0a, #0a0a0a); border: 2px solid #444; border-radius: 6px; padding: 15px;">
+            <label style="margin-bottom: 8px;">Duruş Süresi (Dakika)</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="number" id="durusSure" placeholder="0" min="0" style="flex: 1;" value="0">
+                <button onclick="durusUygula()" style="background: var(--seat-red); color: white; border: none; padding: 14px 20px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 11px;">UYGULA</button>
+                <button onclick="durusTemizle()" style="background: #333; color: #888; border: none; padding: 14px 20px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 11px;">TEMİZLE</button>
+            </div>
+            <div id="durusInfo" style="margin-top: 10px; font-size: 11px; color: #888; text-align: center;"></div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div class="input-group">
+            <label>HDL Yapılan</label>
+            <input type="number" id="adetHDL" placeholder="0" onfocus="setActive('HDL')" oninput="handleInput('HDL')">
+        </div>
+        <div class="input-group">
+            <label>SWL Yapılan</label>
+            <input type="number" id="adetSWL" placeholder="0" onfocus="setActive('SWL')" oninput="handleInput('SWL')">
+        </div>
+    </div>
+
+    <div id="diffBox" class="diff-panel">
+        <span id="targetInfo" style="font-size:42px; font-weight:900; display:block; margin-bottom: 8px;">0 DK</span>
+        <div id="diffVal" style="font-size:12px; font-weight:800; margin-bottom: 12px;">PERFORMANS</div>
+        <div id="hdlBox" class="target-box">
+            <span id="hdlTargetVal" class="target-num">0</span>
+            <span class="target-label">HDL Olmalıydı</span>
+        </div>
+        <div id="swlBox" class="target-box">
+            <span id="swlTargetVal" class="target-num">0</span>
+            <span class="target-label">SWL Olmalıydı</span>
+        </div>
+    </div>
+
+    <label>Üretimin Devamında Ne Yapılacak</label>
+    <select id="modelHedef" onchange="hesapla()" style="border-left: 4px solid var(--seat-red); margin-bottom:15px;">
+        <option value="HDL">HDL (50/Saat)</option>
+        <option value="SWL">SWL (45/Saat)</option>
+    </select>
+
+    <div class="panel-result">
+        <span style="font-size:11px; font-weight:bold; color:var(--accent);">BU SAATTEN SONRA BASILACAK SAYI</span>
+        <span id="sonuc" class="val-display">0</span>
+    </div>
+    
+    <div class="total-panel">
+        <span style="font-size:11px; font-weight:bold; color:var(--success);">VARDİYA SONU NET TOPLAM</span>
+        <span id="toplamSonuc" class="val-display">0</span>
+    </div>
+
+    <div class="debug-info" id="debugInfo">Debug bilgisi yükleniyor...</div>
+</div>
+
+<script>
+    const HIZ_HDL = 50, HIZ_SWL = 45;
+    let isVSonuActive = false, isAutoMode = true, activeMod = 'HDL';
+    let aktifMolalar = { m1: 0, mYemek: 0, m2: 0, mAparat: 0 };
+    let durusSuresi = 0; // Duruş dakikası
+
+    function initLists() {
+        const s = document.getElementById('saatSec'), d = document.getElementById('dakikaSec');
+        for(let i=0; i<24; i++) s.innerHTML += `<option value="${i}">${i < 10 ? '0'+i : i}</option>`;
+        for(let i=0; i<60; i++) d.innerHTML += `<option value="${i}">${i < 10 ? '0'+i : i}</option>`;
+    }
+
+    function setup() {
+        initLists();
+        const now = new Date(), h = now.getHours();
+        document.getElementById('saatSec').value = h;
+        document.getElementById('dakikaSec').value = now.getMinutes();
+        const vBas = document.getElementById('vBas');
+        if (h >= 8 && h < 16) vBas.value = "08:00"; 
+        else if (h >= 16 && h < 24) vBas.value = "16:00"; 
+        else vBas.value = "00:00";
+        updateButtonStatus();
+        setActive('HDL');
+        hesapla();
+    }
+
+    function updateButtonStatus() {
+        const btns = ['m1', 'mYemek', 'm2'];
+        btns.forEach(id => {
+            const btn = document.getElementById(id);
+            if (isAutoMode) btn.classList.add('btn-locked');
+            else btn.classList.remove('btn-locked');
+        });
+    }
+
+    function toggleAutoMode() { 
+        isAutoMode = !isAutoMode; 
+        document.getElementById('autoModeBtn').classList.toggle('on', isAutoMode);
+        document.getElementById('autoModeBtn').innerText = isAutoMode ? "OTO MOLA: AÇIK" : "OTO MOLA: KAPALI";
+        updateButtonStatus();
+        hesapla(); 
+    }
+
+    // APARAT İÇİN ÖZEL FONKSİYON
+    function toggleAparat() {
+        aktifMolalar.mAparat = (aktifMolalar.mAparat > 0) ? 0 : 30;
+        document.getElementById('mAparat').classList.toggle('active', aktifMolalar.mAparat > 0);
+        console.log('APARAT TOGGLE: ' + aktifMolalar.mAparat + ' dakika');
+        hesapla();
+    }
+
+    function setActive(mod) {
+        activeMod = mod;
+        document.getElementById('adetHDL').className = (mod === 'HDL') ? 'input-active' : 'input-passive';
+        document.getElementById('adetSWL').className = (mod === 'SWL') ? 'input-active' : 'input-passive';
+        document.getElementById('hdlBox').style.display = (mod === 'HDL') ? "flex" : "none";
+        document.getElementById('swlBox').style.display = (mod === 'SWL') ? "flex" : "none";
+        if(mod === 'HDL') document.getElementById('adetSWL').value = ""; 
+        else document.getElementById('adetHDL').value = "";
+        hesapla();
+    }
+
+    function handleInput(type) { 
+        if(type !== activeMod) setActive(type); 
+        hesapla(); 
+    }
+
+    function toggleMola(id, sure) {
+        if (isAutoMode) return; // Oto modda çay molaları kilitli
+        aktifMolalar[id] = (aktifMolalar[id] > 0) ? 0 : sure;
+        document.getElementById(id).classList.toggle('active', aktifMolalar[id] > 0);
+        hesapla();
+    }
+
+    function toggleDurusPanel() {
+        const panel = document.getElementById('durusPanel');
+        const btn = document.getElementById('durusToggleBtn');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            btn.style.background = 'linear-gradient(145deg, var(--seat-red), #aa0000)';
+            btn.style.color = 'white';
+            btn.style.borderColor = 'var(--seat-red)';
+        } else {
+            panel.style.display = 'none';
+            btn.style.background = 'linear-gradient(145deg, #252525, #333)';
+            btn.style.color = '#777';
+            btn.style.borderColor = '#444';
+        }
+    }
+
+    function durusUygula() {
+        const sure = parseInt(document.getElementById('durusSure').value) || 0;
+        durusSuresi = Math.max(0, sure);
+        document.getElementById('durusInfo').innerHTML = durusSuresi > 0 
+            ? `✓ <strong style="color: var(--seat-red);">${durusSuresi} dakika</strong> duruş eklendi`
+            : 'Duruş temizlendi';
+        hesapla();
+    }
+
+    function durusTemizle() {
+        durusSuresi = 0;
+        document.getElementById('durusSure').value = '0';
+        document.getElementById('durusInfo').innerHTML = 'Duruş temizlendi';
+        hesapla();
+    }
+
+    function toggleVSonu() {
+        isVSonuActive = !isVSonuActive;
+        const vBas = document.getElementById('vBas').value;
+        if (isVSonuActive) {
+            if (vBas === "08:00") document.getElementById('saatSec').value = 16; 
+            else if (vBas === "16:00") document.getElementById('saatSec').value = 0; 
+            else document.getElementById('saatSec').value = 8;
+            document.getElementById('dakikaSec').value = 0;
+        } else {
+            const now = new Date(); 
+            document.getElementById('saatSec').value = now.getHours(); 
+            document.getElementById('dakikaSec').value = now.getMinutes();
+        }
+        document.getElementById('vSonuBtn').classList.toggle('active', isVSonuActive);
+        hesapla();
+    }
+
+    function hesapla() {
+        const sh = parseInt(document.getElementById('saatSec').value);
+        const sm = parseInt(document.getElementById('dakikaSec').value);
+        const vBasValue = document.getElementById('vBas').value;
+        let [bh, bm] = vBasValue.split(':').map(Number);
+        
+        // Geçen brüt süreyi hesapla
+        let gecenBrut = (sh * 60 + sm) - (bh * 60 + bm);
+        if (gecenBrut < 0) gecenBrut += 1440;
+
+        // Otomatik mola modu (SADECE çay molalarını ve yemek molasını etkiler)
+        if (isAutoMode) {
+            aktifMolalar.m1 = (gecenBrut >= 100) ? 10 : 0;
+            aktifMolalar.mYemek = (gecenBrut >= 200) ? 30 : 0;
+            aktifMolalar.m2 = (gecenBrut >= 300) ? 10 : 0;
+            ['m1', 'mYemek', 'm2'].forEach(id => {
+                document.getElementById(id).classList.toggle('active', aktifMolalar[id] > 0);
+            });
+        }
+        
+        // Aparat durumunu HER ZAMAN koru
+        document.getElementById('mAparat').classList.toggle('active', aktifMolalar.mAparat > 0);
+
+        // Vardiya net kapasitesi (Aparat aktifse 390dk, değilse 420dk)
+        let vardiyaNetKapasite = 420 - aktifMolalar.mAparat - durusSuresi;
+        
+        // Şu ana kadar geçen molalar
+        let molalarGecen = 10 + aktifMolalar.m1 + aktifMolalar.mYemek + aktifMolalar.m2 + durusSuresi;
+        
+        // Aparat sadece 4. saatten (240dk) sonra geçmiş molalara eklenir
+        if (gecenBrut >= 240) {
+            molalarGecen += aktifMolalar.mAparat;
+        }
+        
+        // Net çalışılan dakika
+        let netCalisilanDakika = Math.max(0, Math.min(vardiyaNetKapasite, gecenBrut - molalarGecen));
+        
+        const valHDL = parseFloat(document.getElementById('adetHDL').value) || 0;
+        const valSWL = parseFloat(document.getElementById('adetSWL').value) || 0;
+        const speed = (document.getElementById('modelHedef').value === 'HDL') ? HIZ_HDL : HIZ_SWL;
+        
+        // ŞU ANA KADAR net çalışılan süre = geçen brüt - tüm molalar
+        // netCalisilanDakika zaten doğru hesaplanmış (geçen brüt - hazırlık - çay - yemek - aparat - duruş)
+        let hdlHedefSimdi = Math.round((netCalisilanDakika / 60) * HIZ_HDL);
+        let swlHedefSimdi = Math.round((netCalisilanDakika / 60) * HIZ_SWL);
+        
+        // Negatif olmasın
+        hdlHedefSimdi = Math.max(0, hdlHedefSimdi);
+        swlHedefSimdi = Math.max(0, swlHedefSimdi);
+        
+        document.getElementById('hdlTargetVal').innerText = hdlHedefSimdi;
+        document.getElementById('swlTargetVal').innerText = swlHedefSimdi;
+
+        // Performans hesaplama
+        let hakEdilenDk = (activeMod === 'HDL') ? ((valHDL / HIZ_HDL) * 60) : ((valSWL / HIZ_SWL) * 60);
+        let dkFarki = Math.round(hakEdilenDk - netCalisilanDakika);
+        
+        // Kalan süre ve basılacak adet
+        let kalanNetDakika = Math.max(0, vardiyaNetKapasite - hakEdilenDk);
+        let basılacakAdet = isVSonuActive ? 0 : Math.round((kalanNetDakika / 60) * speed);
+        let tahminiToplam = Math.round((valHDL + valSWL) + basılacakAdet);
+
+        // Sonuçları göster
+        document.getElementById('sonuc').innerText = basılacakAdet;
+        document.getElementById('targetInfo').innerText = (dkFarki > 0 ? "+" : "") + dkFarki + " DK";
+        
+        const vSonuElement = document.getElementById('toplamSonuc');
+        vSonuElement.innerText = tahminiToplam;
+        vSonuElement.classList.toggle('low-production', tahminiToplam < 325);
+        
+        // Performans durumu
+        let dVal = document.getElementById('diffVal');
+        let dBox = document.getElementById('diffBox');
+        if (dkFarki < 0) { 
+            dVal.innerText = "GERİDESİN"; 
+            dVal.style.color = "var(--seat-red)"; 
+            dBox.style.borderBottomColor = "var(--seat-red)"; 
+        } else if (dkFarki >= 1) { 
+            dVal.innerText = "ÖNDESİN"; 
+            dVal.style.color = "var(--success)"; 
+            dBox.style.borderBottomColor = "var(--success)"; 
+        } else { 
+            dVal.innerText = "TAM ZAMANINDA"; 
+            dVal.style.color = "#fff"; 
+            dBox.style.borderBottomColor = "#444"; 
+        }
+
+        // DEBUG BİLGİSİ
+        document.getElementById('debugInfo').innerHTML = 
+            `Brüt: <strong>${gecenBrut}dk</strong> | ` +
+            `Mola: <strong>${molalarGecen}dk</strong> (Haz:10 + Çay:${aktifMolalar.m1+aktifMolalar.m2} + Yemek:${aktifMolalar.mYemek} + Aparat:${aktifMolalar.mAparat} + Duruş:${durusSuresi}) | ` +
+            `<strong style="color: var(--accent);">Net: ${netCalisilanDakika}dk</strong><br>` +
+            `HDL Hedef: <strong>${hdlHedefSimdi}</strong> | ` +
+            `SWL Hedef: <strong>${swlHedefSimdi}</strong> | ` +
+            `Vardiya Kapasite: <strong>${vardiyaNetKapasite}dk</strong>`;
+    }
+</script>
+</body>
+</html>
