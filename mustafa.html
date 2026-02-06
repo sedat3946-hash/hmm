@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ada Döner | Test 5.2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --brand-yellow: #FFB300;
+            --fire-red: #ff4500;
+            --soft-black: #0D0D0D;
+            --muted-gray: #888888;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--soft-black);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* --- MUSTAFA TROLL GİRİŞ EKRANI --- */
+        #mustafaOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.8, 0, 0.2, 1), opacity 0.5s;
+        }
+
+        .mustafa-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(40px, 10vw, 80px);
+            animation: disco 0.4s infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes disco {
+            0% { color: #ff0000; transform: scale(1); }
+            50% { color: #00ff00; transform: scale(1.05) rotate(2deg); }
+            100% { color: #ffff00; transform: scale(1); }
+        }
+
+        .mustafa-btn {
+            background: #ff4500;
+            color: white;
+            border: 4px solid white;
+            width: 180px; height: 180px;
+            border-radius: 50%;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 0 40px #ff4500;
+            animation: shake 0.1s infinite;
+            display: flex; align-items: center; justify-content: center;
+            text-transform: uppercase;
+        }
+
+        @keyframes shake { 0% { transform: translate(2px); } 50% { transform: translate(-2px); } }
+
+        /* --- SİTE STİLLERİ --- */
+        .test-tag {
+            position: fixed; top: 15px; right: 15px;
+            background: rgba(255, 69, 0, 0.2);
+            color: #ff4500; padding: 5px 12px;
+            font-size: 11px; font-weight: 800;
+            border: 1px solid #ff4500; border-radius: 4px;
+            z-index: 999; letter-spacing: 2px;
+        }
+
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(rgba(255, 69, 0, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px; z-index: 0;
+        }
+
+        @keyframes fire-glow {
+            0% { text-shadow: 0px -2px 4px #fff, 0px -4px 10px #ff0, 2px -10px 20px #ff8000, -2px -15px 40px #f00; color: #FFD700; }
+            50% { text-shadow: 0px -4px 8px #fff, -2px -8px 15px #ff0, 5px -15px 30px #ff8000, -4px -20px 50px #f00; color: #FFA500; }
+            100% { text-shadow: 0px -2px 4px #fff, 0px -4px 10px #ff0, 2px -10px 20px #ff8000, -2px -15px 40px #f00; color: #FFD700; }
+        }
+
+        .main-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
+            transition: 0.8s; z-index: 100;
+        }
+
+        .main-screen.hidden { opacity: 0; pointer-events: none; transform: translateY(-100%); }
+
+        .main-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(50px, 12vw, 150px);
+            letter-spacing: 10px;
+            animation: fire-glow 1.2s infinite alternate ease-in-out;
+            cursor: pointer;
+        }
+
+        .menu-panel {
+            position: fixed; top: 0; left: -100%; width: 100%; height: 100vh;
+            background: var(--soft-black); z-index: 110; display: flex;
+            transition: left 0.7s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+
+        .menu-panel.active { left: 0; }
+
+        .menu-left {
+            width: 35%; padding: 40px;
+            background: linear-gradient(180deg, #111 0%, #050505 100%);
+            display: flex; flex-direction: column; justify-content: center;
+            border-right: 2px solid #ff450033;
+        }
+
+        .menu-item {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(28px, 4vw, 50px);
+            color: #333; margin: 10px 0; cursor: pointer; transition: 0.3s;
+        }
+
+        .menu-item.active, .menu-item:hover { color: var(--brand-yellow); padding-left: 15px; }
+
+        .menu-right { width: 65%; padding: 60px; background: #080808; display: flex; align-items: center; justify-content: center; }
+
+        .content-panel { display: none; width: 100%; max-width: 500px; animation: fadeIn 0.5s ease forwards; }
+        .content-panel.active { display: block; }
+        .content-title { font-family: 'Bebas Neue', sans-serif; font-size: 45px; color: var(--brand-yellow); border-left: 4px solid #ff4500; padding-left: 15px; margin-bottom: 15px; }
+        
+        .cta-button { display: inline-block; padding: 15px 35px; background: #ff4500; color: white; text-decoration: none; font-weight: 800; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(15px); } to { opacity: 1; transform: translateX(0); } }
+
+        @media (max-width: 968px) {
+            .menu-panel { flex-direction: column; left: 0; top: -100%; transition: top 0.7s; }
+            .menu-panel.active { top: 0; }
+            .menu-left { width: 100%; height: 40%; }
+            .menu-right { width: 100%; height: 60%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mustafaOverlay">
+        <h1 class="mustafa-title">HAZIR MISIN<br>MUSTAFAAAAA? 😂</h1>
+        <button class="mustafa-btn" onclick="startSite()">TIKLA AGA</button>
+    </div>
+
+    <div class="test-tag">TEST 5.2</div>
+    <div class="bg-pattern"></div>
+
+    <div class="main-screen" id="mainScreen">
+        <div onclick="openMenu()">
+            <h1 class="main-logo">ADA DÖNER</h1>
+            <p style="text-align:center; color:#ff6600; letter-spacing: 5px; font-size: 12px;">ATEŞE DOKUN</p>
+        </div>
+    </div>
+
+    <div class="menu-panel" id="menuPanel">
+        <div class="menu-left">
+            <div style="color:#ff4500; margin-bottom: 20px; cursor:pointer;" onclick="closeMenu()">← GERİ</div>
+            <div class="menu-items">
+                <div class="menu-item active" onclick="showContent('anasayfa', this)">ANASAYFA</div>
+                <div class="menu-item" onclick="showContent('hakkimizda', this)">HİKAYEMİZ</div>
+                <div class="menu-item" onclick="showContent('menu', this)">MENÜ</div>
+                <div class="menu-item" onclick="showContent('iletisim', this)">İLETİŞİM</div>
+            </div>
+        </div>
+        <div class="menu-right">
+            <div class="content-panel active" id="content-anasayfa">
+                <h2 class="content-title">HOŞ GELDİN MUSTAFA</h2>
+                <div style="width:100%; height:200px; background:url('https://images.unsplash.com/photo-1529006557810-274b9b2fc783?q=80&w=800') center/cover; margin-bottom:15px;"></div>
+                <p style="color:#aaa;">Bursa'nın en iyi döneri şimdi senin için test ediliyor. Afiyet olsun!</p>
+                <br>
+                <a href="tel:02241234567" class="cta-button">SİPARİŞ VER</a>
+            </div>
+            <div class="content-panel" id="content-hakkimizda">
+                <h2 class="content-title">BİZ KİMİZ?</h2>
+                <p style="color:#aaa;">1987'den beri odun ateşinde gerçek lezzet.</p>
+            </div>
+            <div class="content-panel" id="content-menu">
+                <h2 class="content-title">MENÜ</h2>
+                <p style="color:#aaa;">Dürüm: 90 TL<br>Ekmek Arası: 85 TL</p>
+            </div>
+            <div class="content-panel" id="content-iletisim">
+                <h2 class="content-title">İLETİŞİM</h2>
+                <p style="color:#aaa;">Nilüfer, Bursa</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startSite() {
+            const overlay = document.getElementById('mustafaOverlay');
+            overlay.style.transform = 'scale(0) rotate(720deg)';
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 600);
+        }
+
+        function openMenu() {
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('menuPanel').classList.add('active');
+        }
+
+        function closeMenu() {
+            document.getElementById('mainScreen').classList.remove('hidden');
+            document.getElementById('menuPanel').classList.remove('active');
+        }
+
+        function showContent(section, element) {
+            const panels = document.querySelectorAll('.content-panel');
+            panels.forEach(p => p.classList.remove('active'));
+            document.getElementById('content-' + section).classList.add('active');
+            
+            const items = document.querySelectorAll('.menu-item');
+            items.forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
+        }
+    </script>
+</body>
+</html>
