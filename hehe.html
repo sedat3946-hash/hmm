@@ -24,7 +24,7 @@
             position: relative;
         }
         
-        /* Animasyonlu arka plan */
+        /* Animasyonlu arka plan - başta gizli */
         .bg-animation {
             position: fixed;
             width: 100%;
@@ -32,6 +32,11 @@
             top: 0;
             left: 0;
             z-index: 1;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        .bg-animation.active {
             opacity: 0.3;
         }
         
@@ -77,8 +82,11 @@
             text-align: center;
             z-index: 99999;
             pointer-events: none;
-            animation: glow-pulse 3s ease-in-out infinite;
             position: relative;
+        }
+        
+        .baslik-konteynir.active {
+            animation: glow-pulse 3s ease-in-out infinite;
         }
         
         @keyframes glow-pulse {
@@ -99,6 +107,9 @@
             color: #ff0000;
             margin-top: 5px;
             text-shadow: 0 0 20px rgba(255,0,0,0.8), 0 0 40px rgba(255,0,0,0.4);
+        }
+        
+        .baslik.alt.active {
             animation: blink 1.5s infinite;
         }
         
@@ -107,25 +118,57 @@
             50% { opacity: 0.7; }
         }
         
+        .button-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 30px;
+            z-index: 100;
+        }
+        
         .btn {
-            padding: 15px 40px;
-            font-size: 1.4rem;
+            padding: 20px 50px;
+            font-size: 1.6rem;
             font-weight: 900;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            position: absolute;
             text-transform: uppercase;
-            transition: all 0.1s;
+            transition: all 0.2s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             letter-spacing: 2px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         }
         
         #noBtn {
             background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
             color: #fff;
-            z-index: 9999;
             border: 3px solid #fff;
+            position: relative;
+        }
+        
+        #yesBtn {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: #fff;
+            border: 3px solid #fff;
+        }
+        
+        /* Aktif modda HAYIR minicik olur */
+        #noBtn.mini {
+            position: absolute !important;
+            padding: 15px 40px;
+            font-size: 1.4rem;
+            z-index: 9999;
+        }
+        
+        #yesBtn.hidden {
+            display: none;
         }
         
         .btn.is-yes {
@@ -140,8 +183,24 @@
         }
         
         .yes-btn {
+            position: absolute;
             z-index: 500;
             color: #fff;
+            padding: 15px 40px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .yes-btn.active {
+            opacity: 1;
             animation: float-gentle 3s ease-in-out infinite;
         }
         
@@ -156,20 +215,20 @@
         }
         .yes-1 { 
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            animation-delay: 0.6s;
+            animation-delay: 0.3s;
         }
         .yes-2 { 
             background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
             color: #000;
-            animation-delay: 1.2s;
+            animation-delay: 0.6s;
         }
         .yes-3 { 
             background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-            animation-delay: 1.8s;
+            animation-delay: 0.9s;
         }
         .yes-4 { 
             background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-            animation-delay: 2.4s;
+            animation-delay: 1.2s;
         }
         
         /* Konfeti efekti */
@@ -201,7 +260,7 @@
             color: #fff;
             font-size: 2.5rem;
             font-weight: 900;
-            z-index: 10000;
+            z-index: 100000;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             text-align: center;
             border: 3px solid #fff;
@@ -250,23 +309,32 @@
     <!-- Animasyonlu arka plan -->
     <div class="bg-animation" id="bgAnimation"></div>
     
-    <div class="baslik-konteynir">
+    <div class="baslik-konteynir" id="baslikKonteynir">
         <span class="baslik">BU SENE İŞTEN ÇIKACAK MISIN</span>
-        <span class="baslik alt">SENCE ??</span>
+        <span class="baslik alt" id="altBaslik">SENCE ??</span>
     </div>
     
-    <button class="btn" id="noBtn">HAYIR</button>
+    <div class="button-container" id="buttonContainer">
+        <button class="btn" id="yesBtn">EVET</button>
+        <button class="btn" id="noBtn">HAYIR</button>
+    </div>
     
     <script>
         const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const buttonContainer = document.getElementById('buttonContainer');
+        const bgAnimation = document.getElementById('bgAnimation');
+        const baslikKonteynir = document.getElementById('baslikKonteynir');
+        const altBaslik = document.getElementById('altBaslik');
+        
         const yesButtons = [];
+        let gameStarted = false;
         let escapeCount = 0;
         let isTransformed = false;
         let crazyModeActive = false;
         let blockingActive = false;
         
         // Arka plan animasyon çemberleri oluştur
-        const bgAnimation = document.getElementById('bgAnimation');
         for (let i = 0; i < 5; i++) {
             const circle = document.createElement('div');
             circle.className = 'bg-circle';
@@ -276,6 +344,62 @@
             circle.style.top = Math.random() * 100 + '%';
             circle.style.animationDelay = (Math.random() * 5) + 's';
             bgAnimation.appendChild(circle);
+        }
+        
+        // 5 EVET butonu oluştur (başta gizli)
+        for (let i = 0; i < 5; i++) {
+            const btn = document.createElement('button');
+            btn.className = `btn yes-btn yes-${i}`;
+            btn.innerText = 'EVET';
+            btn.onclick = () => showMessage();
+            
+            const initialScale = 0.8 + Math.random() * 0.5;
+            btn.style.transform = `scale(${initialScale})`;
+            btn.dataset.scale = initialScale;
+            
+            document.body.appendChild(btn);
+            yesButtons.push(btn);
+        }
+        
+        // Oyunu başlat
+        function startGame() {
+            if (gameStarted) return;
+            gameStarted = true;
+            
+            // Görsel efektleri aktifleştir
+            bgAnimation.classList.add('active');
+            baslikKonteynir.classList.add('active');
+            altBaslik.classList.add('active');
+            
+            // Orijinal buton konteynırını gizle
+            buttonContainer.style.opacity = '0';
+            setTimeout(() => {
+                buttonContainer.style.display = 'none';
+            }, 300);
+            
+            // HAYIR'ı minicik yap ve konumlandır
+            setTimeout(() => {
+                noBtn.classList.add('mini');
+                yesBtn.classList.add('hidden');
+                posBtn(noBtn, false);
+                noBtn.style.transform = 'scale(0.5)';
+                noBtn.style.opacity = '1';
+            }, 400);
+            
+            // EVET butonlarını göster
+            setTimeout(() => {
+                yesButtons.forEach((btn, idx) => {
+                    posBtn(btn, true);
+                    setTimeout(() => {
+                        btn.classList.add('active');
+                    }, idx * 150);
+                });
+            }, 600);
+            
+            // Kaos sistemini başlat
+            setTimeout(() => {
+                startChaos();
+            }, 2000);
         }
         
         function posBtn(el, isYesBtn = false) {
@@ -319,7 +443,7 @@
         }
         
         // Konfeti yağmuru
-        function createConfetti(count = 80) {
+        function createConfetti(count = 100) {
             const colors = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71'];
             for (let i = 0; i < count; i++) {
                 setTimeout(() => {
@@ -332,13 +456,13 @@
                     confetti.style.height = confetti.style.width;
                     document.body.appendChild(confetti);
                     setTimeout(() => confetti.remove(), 3000);
-                }, i * 20);
+                }, i * 15);
             }
         }
         
         // Mesaj kutusu göster
         function showMessage() {
-            createConfetti(150);
+            createConfetti(200);
             const messageBox = document.createElement('div');
             messageBox.className = 'message-box';
             messageBox.innerHTML = `
@@ -350,25 +474,9 @@
             setTimeout(() => messageBox.classList.add('show'), 10);
         }
         
-        // 5 Evet butonu oluştur
-        for (let i = 0; i < 5; i++) {
-            const btn = document.createElement('button');
-            btn.className = `btn yes-btn yes-${i}`;
-            btn.innerText = 'EVET';
-            btn.onclick = () => showMessage();
-            
-            const initialScale = 0.8 + Math.random() * 0.5;
-            btn.style.transform = `scale(${initialScale})`;
-            btn.dataset.scale = initialScale;
-            
-            document.body.appendChild(btn);
-            yesButtons.push(btn);
-            posBtn(btn, true);
-        }
-        
         // HAYIR'ı EVET'e dönüştür
         function transformToYes() {
-            if (isTransformed) return;
+            if (isTransformed || !gameStarted) return;
             isTransformed = true;
             
             const rect = noBtn.getBoundingClientRect();
@@ -378,11 +486,9 @@
             noBtn.innerText = 'EVET';
             noBtn.style.transform = 'scale(1.5)';
             
-            // Tıklanabilir yap
             const originalOnclick = noBtn.onclick;
             noBtn.onclick = () => showMessage();
             
-            // 2 saniye sonra geri döndür
             setTimeout(() => {
                 noBtn.classList.remove('is-yes');
                 noBtn.innerText = 'HAYIR';
@@ -394,7 +500,7 @@
         
         // Deli gibi kaçma modu
         function activateCrazyMode() {
-            if (crazyModeActive) return;
+            if (crazyModeActive || !gameStarted) return;
             crazyModeActive = true;
             
             let crazyCount = 0;
@@ -402,7 +508,6 @@
                 const rect = noBtn.getBoundingClientRect();
                 createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
                 
-                // Çılgın animasyon
                 noBtn.style.animation = 'crazy-spin 0.3s linear';
                 posBtn(noBtn, false);
                 
@@ -420,7 +525,7 @@
         
         // EVET butonunu HAYIR'ın önüne yerleştir
         function blockWithYesButton() {
-            if (blockingActive) return;
+            if (blockingActive || !gameStarted) return;
             blockingActive = true;
             
             const blocker = yesButtons[Math.floor(Math.random() * 5)];
@@ -443,18 +548,22 @@
         
         // HAYIR butonu kaçış fonksiyonu
         function escape() {
+            if (!gameStarted) {
+                startGame();
+                return;
+            }
+            
             escapeCount++;
             
             const rect = noBtn.getBoundingClientRect();
             createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
             
-            // Süper hızlı kaçış
             noBtn.style.transform = `scale(0) rotate(${-180 + Math.random() * 360}deg)`;
             noBtn.style.transition = 'all 0.05s';
             
             setTimeout(() => {
                 posBtn(noBtn, false);
-                noBtn.style.transform = 'scale(0.5)'; // Minicik kal
+                noBtn.style.transform = 'scale(0.5)';
                 noBtn.style.transition = 'all 0.15s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
                 
                 // Her kaçışta rastgele 2-4 EVET butonu büyüsün
@@ -470,14 +579,11 @@
                 
                 // Rastgele olaylar
                 const random = Math.random();
-                if (random < 0.15) {
-                    // %15 - EVET'e dönüş
+                if (random < 0.2) {
                     setTimeout(() => transformToYes(), 200);
-                } else if (random < 0.3) {
-                    // %15 - Deli mod
+                } else if (random < 0.4) {
                     setTimeout(() => activateCrazyMode(), 100);
-                } else if (random < 0.5) {
-                    // %20 - EVET önüne geçer
+                } else if (random < 0.6) {
                     setTimeout(() => blockWithYesButton(), 150);
                 }
                 
@@ -503,24 +609,28 @@
             }, 50);
         }
         
-        // Otomatik kaos sistemi
+        // Otomatik kaos sistemi - sadece oyun başladığında
         function startChaos() {
             // Her 2-4 saniyede rastgele bir şey olsun
             setInterval(() => {
+                if (!gameStarted) return;
+                
                 const random = Math.random();
-                if (random < 0.3) {
-                    escape(); // Otomatik kaç
-                } else if (random < 0.45) {
-                    transformToYes(); // EVET'e dönüş
-                } else if (random < 0.6) {
-                    blockWithYesButton(); // Bloklama
-                } else if (random < 0.7) {
-                    activateCrazyMode(); // Deli mod
+                if (random < 0.35) {
+                    escape();
+                } else if (random < 0.5) {
+                    transformToYes();
+                } else if (random < 0.65) {
+                    blockWithYesButton();
+                } else if (random < 0.75) {
+                    activateCrazyMode();
                 }
             }, 2000 + Math.random() * 2000);
             
             // Her 1-2 saniyede EVET'ler büyüsün
             setInterval(() => {
+                if (!gameStarted) return;
+                
                 const randomYes = yesButtons[Math.floor(Math.random() * 5)];
                 const currentScale = parseFloat(randomYes.dataset.scale || 1);
                 const newScale = Math.min(6, currentScale + 0.4);
@@ -529,7 +639,14 @@
             }, 1000 + Math.random() * 1000);
         }
         
-        // Event listeners
+        // Orijinal EVET butonuna tıklayınca
+        yesBtn.addEventListener('click', () => {
+            if (!gameStarted) {
+                showMessage();
+            }
+        });
+        
+        // HAYIR butonuna yaklaşınca oyun başlasın
         noBtn.addEventListener('mouseenter', escape);
         noBtn.addEventListener('mouseover', escape);
         noBtn.addEventListener('touchstart', (e) => { 
@@ -540,13 +657,6 @@
             e.preventDefault();
             escape();
         });
-        
-        // İlk yerleşim ve kaos başlat
-        window.onload = () => {
-            posBtn(noBtn, false);
-            noBtn.style.transform = 'scale(0.5)'; // Minicik başlasın
-            startChaos();
-        };
     </script>
 </body>
 </html>
