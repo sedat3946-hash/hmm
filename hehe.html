@@ -116,7 +116,7 @@
             cursor: pointer;
             position: absolute;
             text-transform: uppercase;
-            transition: all 0.15s;
+            transition: all 0.1s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             letter-spacing: 2px;
         }
@@ -126,16 +126,17 @@
             color: #fff;
             z-index: 9999;
             border: 3px solid #fff;
-            animation: danger-pulse 2s ease-in-out infinite;
         }
         
-        @keyframes danger-pulse {
-            0%, 100% { 
-                box-shadow: 0 0 20px rgba(255,0,0,0.5), 0 0 40px rgba(255,0,0,0.3);
-            }
-            50% { 
-                box-shadow: 0 0 40px rgba(255,0,0,0.8), 0 0 60px rgba(255,0,0,0.5);
-            }
+        .btn.is-yes {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+            animation: celebrate 0.5s ease-in-out !important;
+        }
+        
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1.5) rotate(0deg); }
+            25% { transform: scale(1.7) rotate(-10deg); }
+            75% { transform: scale(1.7) rotate(10deg); }
         }
         
         .yes-btn {
@@ -225,6 +226,24 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-20px); }
         }
+        
+        @keyframes crazy-spin {
+            0% { transform: rotate(0deg) scale(0.5); }
+            100% { transform: rotate(1080deg) scale(0.5); }
+        }
+        
+        @keyframes vibrate {
+            0%, 100% { transform: translate(0, 0) scale(0.5); }
+            10% { transform: translate(-3px, -3px) scale(0.5); }
+            20% { transform: translate(3px, 3px) scale(0.5); }
+            30% { transform: translate(-3px, 3px) scale(0.5); }
+            40% { transform: translate(3px, -3px) scale(0.5); }
+            50% { transform: translate(-3px, -3px) scale(0.5); }
+            60% { transform: translate(3px, 3px) scale(0.5); }
+            70% { transform: translate(-3px, 3px) scale(0.5); }
+            80% { transform: translate(3px, -3px) scale(0.5); }
+            90% { transform: translate(-3px, -3px) scale(0.5); }
+        }
     </style>
 </head>
 <body>
@@ -242,52 +261,9 @@
         const noBtn = document.getElementById('noBtn');
         const yesButtons = [];
         let escapeCount = 0;
-        let noBtnScale = 0.7; // Daha küçük başlasın
-        let autoEscapeInterval;
-        let autoGrowInterval;
-        
-        // HAYIR butonu otomatik büyüme ve kaçma
-        function startAutoActions() {
-            // Her 3 saniyede bir HAYIR büyüsün
-            autoGrowInterval = setInterval(() => {
-                if (noBtnScale < 2) {
-                    noBtnScale = Math.min(2, noBtnScale + 0.3);
-                    noBtn.style.transform = `scale(${noBtnScale})`;
-                    noBtn.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-                    
-                    // Büyürken sallan
-                    noBtn.style.animation = 'none';
-                    setTimeout(() => {
-                        noBtn.style.animation = 'danger-pulse 2s ease-in-out infinite, shake-hard 0.5s ease-in-out';
-                    }, 10);
-                }
-            }, 3000);
-            
-            // Her 5 saniyede bir rastgele kaçsın (tıklanmadıysa)
-            autoEscapeInterval = setInterval(() => {
-                if (Math.random() < 0.6) { // %60 ihtimal
-                    escape();
-                }
-            }, 5000);
-        }
-        
-        // Yeni animasyon ekle
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes shake-hard {
-                0%, 100% { transform: scale(${noBtnScale}) translateX(0); }
-                10% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
-                20% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
-                30% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
-                40% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
-                50% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
-                60% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
-                70% { transform: scale(${noBtnScale}) translateX(-8px) rotate(-3deg); }
-                80% { transform: scale(${noBtnScale}) translateX(8px) rotate(3deg); }
-                90% { transform: scale(${noBtnScale}) translateX(-5px) rotate(-2deg); }
-            }
-        `;
-        document.head.appendChild(style);
+        let isTransformed = false;
+        let crazyModeActive = false;
+        let blockingActive = false;
         
         // Arka plan animasyon çemberleri oluştur
         const bgAnimation = document.getElementById('bgAnimation');
@@ -307,13 +283,11 @@
             const maxY = window.innerHeight - 100;
             
             if (isYesBtn) {
-                // EVET butonları ekranın her yerine dağılsın (ama üst 200px'den uzak)
                 const x = Math.random() * maxX;
                 const y = 200 + Math.random() * (maxY - 200);
                 el.style.left = x + 'px';
                 el.style.top = y + 'px';
             } else {
-                // HAYIR butonu (başlıktan uzak)
                 const x = Math.random() * maxX;
                 const y = 250 + (Math.random() * (window.innerHeight - 350));
                 el.style.left = x + 'px';
@@ -322,15 +296,16 @@
         }
         
         // Parçacık patlaması efekti
-        function createParticleBurst(x, y) {
-            for (let i = 0; i < 15; i++) {
+        function createParticleBurst(x, y, color = '#ff0000') {
+            for (let i = 0; i < 20; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
+                particle.style.background = color;
                 particle.style.left = x + 'px';
                 particle.style.top = y + 'px';
                 
-                const angle = (Math.PI * 2 * i) / 15;
-                const velocity = 50 + Math.random() * 70;
+                const angle = (Math.PI * 2 * i) / 20;
+                const velocity = 50 + Math.random() * 100;
                 const tx = Math.cos(angle) * velocity;
                 const ty = Math.sin(angle) * velocity;
                 
@@ -344,7 +319,7 @@
         }
         
         // Konfeti yağmuru
-        function createConfetti(count = 50) {
+        function createConfetti(count = 80) {
             const colors = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71'];
             for (let i = 0; i < count; i++) {
                 setTimeout(() => {
@@ -357,13 +332,13 @@
                     confetti.style.height = confetti.style.width;
                     document.body.appendChild(confetti);
                     setTimeout(() => confetti.remove(), 3000);
-                }, i * 30);
+                }, i * 20);
             }
         }
         
         // Mesaj kutusu göster
         function showMessage() {
-            createConfetti(100);
+            createConfetti(150);
             const messageBox = document.createElement('div');
             messageBox.className = 'message-box';
             messageBox.innerHTML = `
@@ -375,129 +350,202 @@
             setTimeout(() => messageBox.classList.add('show'), 10);
         }
         
-        // 5 Evet butonu oluştur - ekranın her yerinde, farklı boyutlarda
+        // 5 Evet butonu oluştur
         for (let i = 0; i < 5; i++) {
             const btn = document.createElement('button');
             btn.className = `btn yes-btn yes-${i}`;
             btn.innerText = 'EVET';
             btn.onclick = () => showMessage();
             
-            // Rastgele başlangıç boyutu (0.8 - 1.3 arası)
             const initialScale = 0.8 + Math.random() * 0.5;
             btn.style.transform = `scale(${initialScale})`;
-            btn.dataset.scale = initialScale; // Mevcut ölçeği sakla
+            btn.dataset.scale = initialScale;
             
             document.body.appendChild(btn);
             yesButtons.push(btn);
-            posBtn(btn, true); // isYesBtn = true
+            posBtn(btn, true);
+        }
+        
+        // HAYIR'ı EVET'e dönüştür
+        function transformToYes() {
+            if (isTransformed) return;
+            isTransformed = true;
+            
+            const rect = noBtn.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2, '#2ecc71');
+            
+            noBtn.classList.add('is-yes');
+            noBtn.innerText = 'EVET';
+            noBtn.style.transform = 'scale(1.5)';
+            
+            // Tıklanabilir yap
+            const originalOnclick = noBtn.onclick;
+            noBtn.onclick = () => showMessage();
+            
+            // 2 saniye sonra geri döndür
+            setTimeout(() => {
+                noBtn.classList.remove('is-yes');
+                noBtn.innerText = 'HAYIR';
+                noBtn.style.transform = 'scale(0.5)';
+                noBtn.onclick = originalOnclick;
+                isTransformed = false;
+            }, 2000);
+        }
+        
+        // Deli gibi kaçma modu
+        function activateCrazyMode() {
+            if (crazyModeActive) return;
+            crazyModeActive = true;
+            
+            let crazyCount = 0;
+            const crazyInterval = setInterval(() => {
+                const rect = noBtn.getBoundingClientRect();
+                createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                
+                // Çılgın animasyon
+                noBtn.style.animation = 'crazy-spin 0.3s linear';
+                posBtn(noBtn, false);
+                
+                crazyCount++;
+                if (crazyCount >= 15) {
+                    clearInterval(crazyInterval);
+                    noBtn.style.animation = 'vibrate 0.1s infinite';
+                    setTimeout(() => {
+                        noBtn.style.animation = '';
+                        crazyModeActive = false;
+                    }, 1000);
+                }
+            }, 300);
+        }
+        
+        // EVET butonunu HAYIR'ın önüne yerleştir
+        function blockWithYesButton() {
+            if (blockingActive) return;
+            blockingActive = true;
+            
+            const blocker = yesButtons[Math.floor(Math.random() * 5)];
+            
+            blocker.style.transition = 'all 0.2s ease-out';
+            blocker.style.left = noBtn.style.left;
+            blocker.style.top = noBtn.style.top;
+            blocker.style.zIndex = '10000';
+            
+            const currentScale = parseFloat(blocker.dataset.scale || 1);
+            const newScale = Math.max(2.5, currentScale);
+            blocker.dataset.scale = newScale;
+            blocker.style.transform = `scale(${newScale})`;
+            
+            setTimeout(() => {
+                blocker.style.zIndex = '500';
+                blockingActive = false;
+            }, 1500);
         }
         
         // HAYIR butonu kaçış fonksiyonu
         function escape() {
             escapeCount++;
             
-            // Parçacık patlaması
             const rect = noBtn.getBoundingClientRect();
             createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
             
-            // HAYIR butonu bazen küçülsün, bazen büyüsün (sürpriz!)
-            const shrinkChance = Math.random();
-            if (shrinkChance < 0.7) {
-                // %70 küçülme
-                noBtnScale = Math.max(0.4, noBtnScale - (0.1 + Math.random() * 0.15));
-            } else {
-                // %30 büyüme (şaşırtsın!)
-                noBtnScale = Math.min(1.8, noBtnScale + 0.2);
-            }
-            
-            // Süper hızlı kaçış animasyonu - rastgele yönlere
-            const randomRotation = -180 + Math.random() * 360;
-            noBtn.style.transform = `scale(0) rotate(${randomRotation}deg)`;
-            noBtn.style.transition = 'all 0.06s';
+            // Süper hızlı kaçış
+            noBtn.style.transform = `scale(0) rotate(${-180 + Math.random() * 360}deg)`;
+            noBtn.style.transition = 'all 0.05s';
             
             setTimeout(() => {
                 posBtn(noBtn, false);
-                noBtn.style.transform = `scale(${noBtnScale}) rotate(0deg)`;
-                noBtn.style.transition = 'all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                noBtn.style.transform = 'scale(0.5)'; // Minicik kal
+                noBtn.style.transition = 'all 0.15s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
                 
-                // Her kaçışta rastgele 1-3 EVET butonu büyüsün
-                const growCount = 1 + Math.floor(Math.random() * 3);
+                // Her kaçışta rastgele 2-4 EVET butonu büyüsün
+                const growCount = 2 + Math.floor(Math.random() * 3);
                 for (let i = 0; i < growCount; i++) {
                     const randomYes = yesButtons[Math.floor(Math.random() * 5)];
                     const currentScale = parseFloat(randomYes.dataset.scale || 1);
-                    const newScale = Math.min(4, currentScale + (0.2 + Math.random() * 0.4));
+                    const newScale = Math.min(5, currentScale + (0.3 + Math.random() * 0.5));
                     randomYes.dataset.scale = newScale;
                     randomYes.style.transform = `scale(${newScale})`;
                     randomYes.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
                 }
                 
-                // Her 3 kaçışta EVET butonları yeniden dağılsın (ekranın her yerine)
+                // Rastgele olaylar
+                const random = Math.random();
+                if (random < 0.15) {
+                    // %15 - EVET'e dönüş
+                    setTimeout(() => transformToYes(), 200);
+                } else if (random < 0.3) {
+                    // %15 - Deli mod
+                    setTimeout(() => activateCrazyMode(), 100);
+                } else if (random < 0.5) {
+                    // %20 - EVET önüne geçer
+                    setTimeout(() => blockWithYesButton(), 150);
+                }
+                
+                // Her 3 kaçışta EVET'ler yeniden dağılsın
                 if (escapeCount % 3 === 0) {
                     yesButtons.forEach((btn, idx) => {
                         setTimeout(() => {
-                            btn.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                            btn.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
                             posBtn(btn, true);
-                        }, idx * 60);
+                        }, idx * 50);
                     });
                 }
                 
-                // Her 4 kaçışta bir EVET butonları HAYIR'ı kuşatsın
-                if (escapeCount % 4 === 0) {
-                    const noBtnX = parseFloat(noBtn.style.left);
-                    const noBtnY = parseFloat(noBtn.style.top);
-                    yesButtons.forEach((btn, idx) => {
-                        setTimeout(() => {
-                            btn.style.transition = 'all 0.8s ease-out';
-                            const angle = (Math.PI * 2 * idx) / 5;
-                            const radius = 150;
-                            btn.style.left = (noBtnX + Math.cos(angle) * radius) + 'px';
-                            btn.style.top = (noBtnY + Math.sin(angle) * radius) + 'px';
-                        }, idx * 100);
-                    });
-                }
-                
-                // Her 5 kaçışta rastgele 2-4 EVET butonu devleşsin
+                // Her 5 kaçışta tüm EVET'ler devleşsin
                 if (escapeCount % 5 === 0) {
-                    const megaGrowCount = 2 + Math.floor(Math.random() * 3);
-                    for (let i = 0; i < megaGrowCount; i++) {
-                        const randomYes = yesButtons[Math.floor(Math.random() * 5)];
-                        const currentScale = parseFloat(randomYes.dataset.scale || 1);
-                        const newScale = Math.min(5, currentScale + 0.8);
-                        randomYes.dataset.scale = newScale;
-                        randomYes.style.transform = `scale(${newScale})`;
-                    }
-                }
-                
-                // Her 7 kaçışta tüm EVET'ler ekranı kaplasın
-                if (escapeCount % 7 === 0) {
                     yesButtons.forEach(btn => {
                         const currentScale = parseFloat(btn.dataset.scale || 1);
-                        const newScale = Math.min(5, currentScale + 1);
+                        const newScale = Math.min(6, currentScale + 1.2);
                         btn.dataset.scale = newScale;
                         btn.style.transform = `scale(${newScale})`;
                     });
                 }
-            }, 60);
+            }, 50);
         }
         
-        // Event listeners - HAYIR'a mouse yaklaşınca veya dokunulunca kaçsın
+        // Otomatik kaos sistemi
+        function startChaos() {
+            // Her 2-4 saniyede rastgele bir şey olsun
+            setInterval(() => {
+                const random = Math.random();
+                if (random < 0.3) {
+                    escape(); // Otomatik kaç
+                } else if (random < 0.45) {
+                    transformToYes(); // EVET'e dönüş
+                } else if (random < 0.6) {
+                    blockWithYesButton(); // Bloklama
+                } else if (random < 0.7) {
+                    activateCrazyMode(); // Deli mod
+                }
+            }, 2000 + Math.random() * 2000);
+            
+            // Her 1-2 saniyede EVET'ler büyüsün
+            setInterval(() => {
+                const randomYes = yesButtons[Math.floor(Math.random() * 5)];
+                const currentScale = parseFloat(randomYes.dataset.scale || 1);
+                const newScale = Math.min(6, currentScale + 0.4);
+                randomYes.dataset.scale = newScale;
+                randomYes.style.transform = `scale(${newScale})`;
+            }, 1000 + Math.random() * 1000);
+        }
+        
+        // Event listeners
         noBtn.addEventListener('mouseenter', escape);
         noBtn.addEventListener('mouseover', escape);
         noBtn.addEventListener('touchstart', (e) => { 
             e.preventDefault(); 
             escape(); 
         });
-        
-        // Ekstra: HAYIR'a tıklamaya çalışınca da kaçsın
         noBtn.addEventListener('mousedown', (e) => {
             e.preventDefault();
             escape();
         });
         
-        // İlk yerleşim
+        // İlk yerleşim ve kaos başlat
         window.onload = () => {
             posBtn(noBtn, false);
-            startAutoActions(); // Otomatik hareketleri başlat
+            noBtn.style.transform = 'scale(0.5)'; // Minicik başlasın
+            startChaos();
         };
     </script>
 </body>
