@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Önemli Soru</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Animasyonlu arka plan */
+        .bg-animation {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            opacity: 0.3;
+        }
+        
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,0,0,0.3) 0%, transparent 70%);
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Parçacık sistemi */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ff0000;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+        }
+        
+        @keyframes particle-burst {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), var(--ty)) scale(0);
+            }
+        }
+        
+        .baslik-konteynir {
+            margin-top: 50px;
+            padding: 20px;
+            text-align: center;
+            z-index: 99999;
+            pointer-events: none;
+            animation: glow-pulse 3s ease-in-out infinite;
+            position: relative;
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255,0,0,0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255,0,0,0.8)); }
+        }
+        
+        .baslik {
+            display: block;
+            font-size: 2.2rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .baslik.alt {
+            font-size: 3rem;
+            color: #ff0000;
+            margin-top: 5px;
+            text-shadow: 0 0 20px rgba(255,0,0,0.8), 0 0 40px rgba(255,0,0,0.4);
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: absolute;
+            text-transform: uppercase;
+            transition: all 0.15s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+        
+        #noBtn {
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            color: #fff;
+            z-index: 9999;
+            border: 3px solid #fff;
+            animation: danger-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes danger-pulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(255,0,0,0.5), 0 0 40px rgba(255,0,0,0.3);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(255,0,0,0.8), 0 0 60px rgba(255,0,0,0.5);
+            }
+        }
+        
+        .yes-btn {
+            z-index: 500;
+            color: #fff;
+            animation: float-gentle 3s ease-in-out infinite;
+        }
+        
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .yes-0 { 
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            animation-delay: 0s;
+        }
+        .yes-1 { 
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            animation-delay: 0.6s;
+        }
+        .yes-2 { 
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+            color: #000;
+            animation-delay: 1.2s;
+        }
+        .yes-3 { 
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            animation-delay: 1.8s;
+        }
+        .yes-4 { 
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            animation-delay: 2.4s;
+        }
+        
+        /* Konfeti efekti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #f1c40f;
+            z-index: 9999;
+            animation: confetti-fall 3s linear forwards;
+        }
+        
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Mesaj kutusu */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            padding: 40px 60px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 2.5rem;
+            font-weight: 900;
+            z-index: 10000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 3px solid #fff;
+        }
+        
+        .message-box.show {
+            animation: message-appear 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+        
+        @keyframes message-appear {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .emoji {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 20px;
+            animation: bounce 0.6s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animasyonlu arka plan -->
+    <div class="bg-animation" id="bgAnimation"></div>
+    
+    <div class="baslik-konteynir">
+        <span class="baslik">BU SENE İŞTEN ÇIKACAK MISIN</span>
+        <span class="baslik alt">SENCE ??</span>
+    </div>
+    
+    <button class="btn" id="noBtn">HAYIR</button>
+    
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesButtons = [];
+        let escapeCount = 0;
+        let noBtnScale = 0.7; // Daha küçük başlasın
+        let autoEscapeInterval;
+        let autoGrowInterval;
+        
+        // HAYIR butonu otomatik büyüme ve kaçma
+        function startAutoActions() {
+            // Her 3 saniyede bir HAYIR büyüsün
+            autoGrowInterval = setInterval(() => {
+                if (noBtnScale < 2) {
+                    noBtnScale = Math.min(2, noBtnScale + 0.3);
+                    noBtn.style.transform = `scale(${noBtnScale})`;
+                    noBtn.style.transition = 'all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                    
+                    // Büyürken sallan
+                    noBtn.style.animation = 'none';
+                    setTimeout(() => {
+                        noBtn.style.animation = 'danger-pulse 2s ease-in-out infinite, shake-hard 0.5s ease-in-out';
+                    }, 10);
+                }
+            }, 3000);
+            
+            // Her 5 saniyede bir rastgele kaçsın (tıklanmadıysa)
+            autoEscapeInterval = setInterval(() => {
+                if (Math.random() < 0.6) { // %60 ihtimal
+                    escape();
+                }
+            }, 5000);
+        }
+        
+        // Yeni animasyon ekle
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake-hard {
+                0%, 100% { transform: scale(${noBtnScale}) translateX(0); }
+                10% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
+                20% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
+                30% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
+                40% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
+                50% { transform: scale(${noBtnScale}) translateX(-10px) rotate(-5deg); }
+                60% { transform: scale(${noBtnScale}) translateX(10px) rotate(5deg); }
+                70% { transform: scale(${noBtnScale}) translateX(-8px) rotate(-3deg); }
+                80% { transform: scale(${noBtnScale}) translateX(8px) rotate(3deg); }
+                90% { transform: scale(${noBtnScale}) translateX(-5px) rotate(-2deg); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Arka plan animasyon çemberleri oluştur
+        const bgAnimation = document.getElementById('bgAnimation');
+        for (let i = 0; i < 5; i++) {
+            const circle = document.createElement('div');
+            circle.className = 'bg-circle';
+            circle.style.width = (100 + Math.random() * 200) + 'px';
+            circle.style.height = circle.style.width;
+            circle.style.left = Math.random() * 100 + '%';
+            circle.style.top = Math.random() * 100 + '%';
+            circle.style.animationDelay = (Math.random() * 5) + 's';
+            bgAnimation.appendChild(circle);
+        }
+        
+        function posBtn(el, isYesBtn = false) {
+            const maxX = window.innerWidth - 150;
+            const maxY = window.innerHeight - 100;
+            
+            if (isYesBtn) {
+                // EVET butonları ekranın her yerine dağılsın (ama üst 200px'den uzak)
+                const x = Math.random() * maxX;
+                const y = 200 + Math.random() * (maxY - 200);
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+            } else {
+                // HAYIR butonu (başlıktan uzak)
+                const x = Math.random() * maxX;
+                const y = 250 + (Math.random() * (window.innerHeight - 350));
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+            }
+        }
+        
+        // Parçacık patlaması efekti
+        function createParticleBurst(x, y) {
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                
+                const angle = (Math.PI * 2 * i) / 15;
+                const velocity = 50 + Math.random() * 70;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                particle.style.animation = `particle-burst 0.6s ease-out forwards`;
+                
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+        
+        // Konfeti yağmuru
+        function createConfetti(count = 50) {
+            const colors = ['#f1c40f', '#e67e22', '#e74c3c', '#9b59b6', '#3498db', '#2ecc71'];
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-10px';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = (5 + Math.random() * 10) + 'px';
+                    confetti.style.height = confetti.style.width;
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+        
+        // Mesaj kutusu göster
+        function showMessage() {
+            createConfetti(100);
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box';
+            messageBox.innerHTML = `
+                <span class="emoji">🎉</span>
+                Hayırlısı olsun!
+                <div style="font-size: 1.2rem; margin-top: 20px; opacity: 0.9;">İşte bu kadardı 😄</div>
+            `;
+            document.body.appendChild(messageBox);
+            setTimeout(() => messageBox.classList.add('show'), 10);
+        }
+        
+        // 5 Evet butonu oluştur - ekranın her yerinde, farklı boyutlarda
+        for (let i = 0; i < 5; i++) {
+            const btn = document.createElement('button');
+            btn.className = `btn yes-btn yes-${i}`;
+            btn.innerText = 'EVET';
+            btn.onclick = () => showMessage();
+            
+            // Rastgele başlangıç boyutu (0.8 - 1.3 arası)
+            const initialScale = 0.8 + Math.random() * 0.5;
+            btn.style.transform = `scale(${initialScale})`;
+            btn.dataset.scale = initialScale; // Mevcut ölçeği sakla
+            
+            document.body.appendChild(btn);
+            yesButtons.push(btn);
+            posBtn(btn, true); // isYesBtn = true
+        }
+        
+        // HAYIR butonu kaçış fonksiyonu
+        function escape() {
+            escapeCount++;
+            
+            // Parçacık patlaması
+            const rect = noBtn.getBoundingClientRect();
+            createParticleBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            
+            // HAYIR butonu bazen küçülsün, bazen büyüsün (sürpriz!)
+            const shrinkChance = Math.random();
+            if (shrinkChance < 0.7) {
+                // %70 küçülme
+                noBtnScale = Math.max(0.4, noBtnScale - (0.1 + Math.random() * 0.15));
+            } else {
+                // %30 büyüme (şaşırtsın!)
+                noBtnScale = Math.min(1.8, noBtnScale + 0.2);
+            }
+            
+            // Süper hızlı kaçış animasyonu - rastgele yönlere
+            const randomRotation = -180 + Math.random() * 360;
+            noBtn.style.transform = `scale(0) rotate(${randomRotation}deg)`;
+            noBtn.style.transition = 'all 0.06s';
+            
+            setTimeout(() => {
+                posBtn(noBtn, false);
+                noBtn.style.transform = `scale(${noBtnScale}) rotate(0deg)`;
+                noBtn.style.transition = 'all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                
+                // Her kaçışta rastgele 1-3 EVET butonu büyüsün
+                const growCount = 1 + Math.floor(Math.random() * 3);
+                for (let i = 0; i < growCount; i++) {
+                    const randomYes = yesButtons[Math.floor(Math.random() * 5)];
+                    const currentScale = parseFloat(randomYes.dataset.scale || 1);
+                    const newScale = Math.min(4, currentScale + (0.2 + Math.random() * 0.4));
+                    randomYes.dataset.scale = newScale;
+                    randomYes.style.transform = `scale(${newScale})`;
+                    randomYes.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                }
+                
+                // Her 3 kaçışta EVET butonları yeniden dağılsın (ekranın her yerine)
+                if (escapeCount % 3 === 0) {
+                    yesButtons.forEach((btn, idx) => {
+                        setTimeout(() => {
+                            btn.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                            posBtn(btn, true);
+                        }, idx * 60);
+                    });
+                }
+                
+                // Her 4 kaçışta bir EVET butonları HAYIR'ı kuşatsın
+                if (escapeCount % 4 === 0) {
+                    const noBtnX = parseFloat(noBtn.style.left);
+                    const noBtnY = parseFloat(noBtn.style.top);
+                    yesButtons.forEach((btn, idx) => {
+                        setTimeout(() => {
+                            btn.style.transition = 'all 0.8s ease-out';
+                            const angle = (Math.PI * 2 * idx) / 5;
+                            const radius = 150;
+                            btn.style.left = (noBtnX + Math.cos(angle) * radius) + 'px';
+                            btn.style.top = (noBtnY + Math.sin(angle) * radius) + 'px';
+                        }, idx * 100);
+                    });
+                }
+                
+                // Her 5 kaçışta rastgele 2-4 EVET butonu devleşsin
+                if (escapeCount % 5 === 0) {
+                    const megaGrowCount = 2 + Math.floor(Math.random() * 3);
+                    for (let i = 0; i < megaGrowCount; i++) {
+                        const randomYes = yesButtons[Math.floor(Math.random() * 5)];
+                        const currentScale = parseFloat(randomYes.dataset.scale || 1);
+                        const newScale = Math.min(5, currentScale + 0.8);
+                        randomYes.dataset.scale = newScale;
+                        randomYes.style.transform = `scale(${newScale})`;
+                    }
+                }
+                
+                // Her 7 kaçışta tüm EVET'ler ekranı kaplasın
+                if (escapeCount % 7 === 0) {
+                    yesButtons.forEach(btn => {
+                        const currentScale = parseFloat(btn.dataset.scale || 1);
+                        const newScale = Math.min(5, currentScale + 1);
+                        btn.dataset.scale = newScale;
+                        btn.style.transform = `scale(${newScale})`;
+                    });
+                }
+            }, 60);
+        }
+        
+        // Event listeners - HAYIR'a mouse yaklaşınca veya dokunulunca kaçsın
+        noBtn.addEventListener('mouseenter', escape);
+        noBtn.addEventListener('mouseover', escape);
+        noBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            escape(); 
+        });
+        
+        // Ekstra: HAYIR'a tıklamaya çalışınca da kaçsın
+        noBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            escape();
+        });
+        
+        // İlk yerleşim
+        window.onload = () => {
+            posBtn(noBtn, false);
+            startAutoActions(); // Otomatik hareketleri başlat
+        };
+    </script>
+</body>
+</html>
